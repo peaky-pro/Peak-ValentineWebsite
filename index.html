@@ -3,38 +3,305 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Will You Be My Valentine?</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>For You ❤️</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=Great+Vibes&family=Merriweather:wght@300;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CORE STYLES --- */
+        body {
+            font-family: 'Merriweather', serif;
+            background-color: #ffebee;
+            color: #d32f2f;
+            text-align: center;
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Language Toggle */
+        #lang-switch {
+            position: absolute; top: 20px; right: 20px; z-index: 100;
+            background: white; padding: 8px 15px; border-radius: 20px;
+            cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-weight: bold; border: 2px solid #d32f2f; color: #d32f2f;
+        }
+
+        .fancy-title { font-family: 'Great Vibes', cursive; font-size: 3.5rem; text-shadow: 2px 2px 4px white; margin: 10px; }
+        
+        /* Letter Design */
+        .letter-paper {
+            background: #fffdf0;
+            background-image: radial-gradient(#f3eacb 1px, transparent 1px);
+            background-size: 20px 20px;
+            padding: 40px;
+            max-width: 600px;
+            border: 2px solid #d4af37;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            font-family: 'Dancing Script', cursive;
+            font-size: 1.6rem;
+            line-height: 1.6;
+            color: #4a4a4a;
+            text-align: left;
+            max-height: 60vh;
+            overflow-y: auto;
+            transform: rotate(-1deg);
+        }
+
+        /* Images & Video */
+        .main-gif { width: 250px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        
+        #video-container { position: relative; width: 80%; max-width: 800px; }
+        #main-video { width: 100%; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 5px solid white; display: block; }
+
+        #skip-btn { 
+            position: absolute; bottom: 20px; right: 20px;
+            background: rgba(211, 47, 47, 0.8); color: white;
+            padding: 10px 20px; border-radius: 30px; border: none;
+            cursor: pointer; font-weight: bold; z-index: 50; transition: 0.3s;
+        }
+
+        #envelope-img { width: 280px; cursor: pointer; transition: transform 0.3s; margin-top: 20px; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.3)); }
+        #envelope-img:hover { transform: scale(1.05); }
+
+        /* Buttons Container */
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px; /* Space between buttons */
+            margin-top: 20px;
+            position: relative;
+            height: 60px; /* Keeps layout stable when button moves */
+        }
+
+        button {
+            padding: 12px 30px; font-size: 1.3rem; margin: 0; cursor: pointer;
+            border: none; border-radius: 50px; background-color: #d32f2f;
+            color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: 0.2s;
+        }
+
+        input { padding: 10px; font-size: 1.2rem; border-radius: 10px; border: 2px solid #d32f2f; text-align: center; }
+
+        .screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: #ffebee; z-index: 10;
+        }
+        .hidden { display: none !important; }
+
+        /* Animations */
+        #noButton { position: relative; } /* Starts relative, becomes absolute when moved */
+        .flower { position: absolute; top: -50px; font-size: 24px; animation: fall linear infinite; z-index: 20; }
+        @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <!-- GIF on top of the buttons -->
-        <img id="topGif" src="assets/Sailor Moon Love GIF.gif" alt="Romantic GIF">
 
-        <h1>Will You Be My Valentine?</h1>
-        <p>Every moment with you is special. Will you make this Valentine's Day unforgettable?</p>
+    <button id="lang-switch" onclick="toggleLanguage()">ESPAÑOL</button>
 
+    <audio id="bg-music" loop>
+        <source src="assets/Gustavo_Santaolalla_-_I_Love_You_Too_Much_Demo_(Rilds.com).mp3" type="audio/mp3">
+    </audio>
 
-        <!-- Buttons -->
-        <button id="yesButton">Yes!</button>
-        <button id="noButton">No</button>
+    <div id="password-screen" class="screen">
+        <h1 class="fancy-title" id="t-welcome">Welcome, my love 💖</h1>
+        <p id="t-enter-pass">Enter the magic word to begin:</p>
+        <input type="password" id="password-input" placeholder="Password">
+        <br>
+        <button onclick="checkPassword()" id="btn-unlock">Unlock</button>
+        <p id="error-msg" style="color:red; display:none;">Incorrect password</p>
+    </div>
 
-        <!-- Hidden elements (shown when "Yes" is clicked) -->
-        <div id="response" style="display: none;">
-            <img id="celebrationGif" src="assets/giphy.gif" alt="Celebration GIF">
-            <p id="yayText">Yay! 💖</p>
-            <p id="heartfeltMessage"></p>
+    <div id="video-screen" class="screen hidden">
+        <div id="video-container">
+            <video id="main-video" controls playsinline>
+                <source src="assets/SpongeBob-Happy-Valentines-Day.mp4" type="video/mp4">
+            </video>
+            <button id="skip-btn" onclick="finishVideo()">Skip >></button>
         </div>
+    </div>
 
-    
-         
-         <!-- Music-->
-          <audio id="backgroundMusic" loop>
-            <source src="assets/springs! - Magnetic [NCS Release].mp3" type="audio/mpeg">
-            Your browser does not support the audio element!
-          </audio>
-        </div>
+    <div id="valentine-screen" class="screen hidden">
+        <img src="assets/Sailor Moon Love GIF.gif" class="main-gif">
+        <h1 class="fancy-title" id="t-question">Will you be my Valentine? 🌹</h1>
         
-        <script src="script.js"></script>
+        <div class="button-container">
+            <button id="yesButton">YES! 💖</button>
+            <button id="noButton" onmouseover="moveNo()" ontouchstart="moveNo()">No 😢</button>
+        </div>
+    </div>
+
+    <div id="envelope-screen" class="screen hidden">
+        <h1 class="fancy-title" id="t-yay">Yay! I knew it! 💖</h1>
+        <img src="assets/giphy.gif" class="main-gif" style="width: 150px;">
+        <p id="t-click-env">I wrote something for you... (Click the envelope)</p>
+        <img src="assets/envelope.png" id="envelope-img" onclick="openLetter()">
+    </div>
+
+    <div id="letter-screen" class="screen hidden">
+        <h1 class="fancy-title" id="t-for-you">For You 💌</h1>
+        <div class="letter-paper" id="final-letter"></div>
+        <br>
+        <button onclick="sendKiss()" id="btn-kiss">Give me a kiss 💋</button>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const ENCRYPTED_LETTER = "U2FsdGVkX19S8w/ea9gWJjhBiY6B4HXOQTUvUObG5qT6STjUjOBvQoTVV+0lq56OHBHNzqaNdNvgNmMdp8npYQ=="; 
+        
+        const EMAIL_PUBLIC_KEY = "YJm6SQnFjbBEr5cA8";
+        const EMAIL_SERVICE_ID = "service_aqwokx8";
+        const EMAIL_TEMPLATE_ID = "template_3o2ie33";
+
+        (function(){ emailjs.init(EMAIL_PUBLIC_KEY); })();
+
+        // --- ELEMENTS ---
+        const video = document.getElementById('main-video');
+        const music = document.getElementById('bg-music');
+        const noButton = document.getElementById('noButton');
+        const yesButton = document.getElementById('yesButton');
+        
+        let yesScale = 1; 
+
+        // --- LANGUAGE ---
+        let currentLang = 'EN';
+        const translations = {
+            EN: {
+                welcome: "Welcome, my love 💖",
+                enterPass: "Enter the magic word to begin:",
+                unlock: "Unlock",
+                question: "Will you be my Valentine? 🌹",
+                yes: "YES! 💖",
+                no: "No 😢",
+                yay: "Yay! I knew it! 💖",
+                clickEnv: "I wrote something for you... (Click the envelope)",
+                forYou: "For Nashley 💌",
+                kiss: "Give me a kiss 💋",
+                toggle: "ESPAÑOL",
+                skip: "Skip >>"
+            },
+            ES: {
+                welcome: "Bienvenida, mi amor 💖",
+                enterPass: "Ingresa la palabra mágica:",
+                unlock: "Desbloquear",
+                question: "¿Quieres ser mi San Valentín? 🌹",
+                yes: "¡SÍ! 💖",
+                no: "No 😢",
+                yay: "¡Siii! ¡Sabía que dirías que sí! 💖",
+                clickEnv: "Escribí algo para ti... (Haz clic en el sobre)",
+                forYou: "Para Nashley 💌",
+                kiss: "Dame un beso 💋",
+                toggle: "ENGLISH",
+                skip: "Saltar >>"
+            }
+        };
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'EN' ? 'ES' : 'EN';
+            const t = translations[currentLang];
+            document.getElementById('t-welcome').innerText = t.welcome;
+            document.getElementById('t-enter-pass').innerText = t.enterPass;
+            document.getElementById('btn-unlock').innerText = t.unlock;
+            document.getElementById('t-question').innerText = t.question;
+            document.getElementById('yesButton').innerText = t.yes;
+            document.getElementById('noButton').innerText = t.no;
+            document.getElementById('t-yay').innerText = t.yay;
+            document.getElementById('t-click-env').innerText = t.clickEnv;
+            document.getElementById('t-for-you').innerText = t.forYou;
+            document.getElementById('btn-kiss').innerText = t.kiss;
+            document.getElementById('lang-switch').innerText = t.toggle;
+            document.getElementById('skip-btn').innerText = t.skip;
+        }
+
+        function checkPassword() {
+            const pass = document.getElementById('password-input').value;
+            try {
+                const bytes = CryptoJS.AES.decrypt(ENCRYPTED_LETTER, pass);
+                const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
+
+                if (decryptedText.length > 0) {
+                    document.getElementById('final-letter').innerText = decryptedText;
+                    document.getElementById('password-screen').classList.add('hidden');
+                    document.getElementById('video-screen').classList.remove('hidden');
+                    video.play();
+                } else {
+                    document.getElementById('error-msg').style.display = 'block';
+                }
+            } catch (e) {
+                document.getElementById('error-msg').style.display = 'block';
+            }
+        }
+
+        video.onended = function() { finishVideo(); };
+
+        function finishVideo() {
+            video.pause();
+            document.getElementById('video-screen').classList.add('hidden');
+            document.getElementById('valentine-screen').classList.remove('hidden');
+            music.volume = 0.5;
+            music.play();
+        }
+
+        // --- BUTTON MOVEMENT ---
+        function moveNo() {
+            // Calculate random position
+            const x = Math.random() * (window.innerWidth - noButton.offsetWidth);
+            const y = Math.random() * (window.innerHeight - noButton.offsetHeight);
+            
+            // Switch to absolute positioning to fly around screen
+            noButton.style.position = 'fixed'; 
+            noButton.style.left = `${x}px`;
+            noButton.style.top = `${y}px`;
+
+            // Grow Yes button
+            yesScale += 0.2; 
+            yesButton.style.transform = `scale(${yesScale})`;
+        }
+
+        yesButton.addEventListener('click', () => {
+            document.getElementById('valentine-screen').classList.add('hidden');
+            document.getElementById('envelope-screen').classList.remove('hidden');
+            
+            emailjs.send(EMAIL_SERVICE_ID, EMAIL_TEMPLATE_ID, {
+                subject: "SHE SAID YES! (" + currentLang + ")",
+                message: "Nashley clicked YES!"
+            }).then(null, function(){ alert("Email error (check console)"); });
+
+            startFlowers();
+        });
+
+        window.openLetter = function() {
+            document.getElementById('envelope-screen').classList.add('hidden');
+            document.getElementById('letter-screen').classList.remove('hidden');
+        }
+
+        window.sendKiss = function() {
+            const msg = currentLang === 'EN' ? "Mwah! 💋 I got your kiss!" : "¡Muah! 💋 ¡Recibí tu beso!";
+            alert(msg);
+            emailjs.send(EMAIL_SERVICE_ID, EMAIL_TEMPLATE_ID, {
+                subject: "SHE SENT A KISS! 💋",
+                message: "Letter read + Kiss sent."
+            });
+        }
+
+        function startFlowers() {
+            setInterval(() => {
+                const flower = document.createElement('div');
+                flower.classList.add('flower');
+                flower.innerText = '🌸';
+                flower.style.left = Math.random() * 100 + 'vw';
+                flower.style.animationDuration = Math.random() * 3 + 2 + 's';
+                document.body.appendChild(flower);
+                setTimeout(() => flower.remove(), 5000);
+            }, 300);
+        }
+    </script>
 </body>
 </html>
