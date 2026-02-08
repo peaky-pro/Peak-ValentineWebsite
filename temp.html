@@ -1,0 +1,14 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<h3>Letter Encryption Tool</h3>
+<textarea id="msg" placeholder="Write your letter here"></textarea><br>
+<input id="pass" placeholder="Password she will use"><br>
+<button onclick="encrypt()">Generate Safe Code</button>
+<p id="output" style="word-break: break-all; font-family: times new roman;"></p>
+<script>
+function encrypt() {
+    var msg = document.getElementById("msg").value;
+    var pass = document.getElementById("pass").value;
+    var encrypted = CryptoJS.AES.encrypt(msg, pass).toString();
+    document.getElementById("output").innerText = encrypted;
+}
+</script>
